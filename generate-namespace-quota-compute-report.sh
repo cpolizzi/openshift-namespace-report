@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# References:
-# - https://access.redhat.com/solutions/3986301
-
 function get_timestamp_format() {
     local result="%Y-%m-%dT%H:%M:%SZ"
 
@@ -17,19 +14,19 @@ function log() {
 
 # Prepare for report data capture
 report_timestamp=$(date -u +"$(get_timestamp_format)")
-report_file=reports/namespace-resource-report.${report_timestamp}.csv
+report_file=reports/namespace-quota-compute-report.${report_timestamp}.csv
 mkdir -p $(dirname ${report_file})
 
 # Redirect stdout to the report file
 exec 1>"${report_file}"
 
-# Retrieve from every namespace all resources
-log "Retrieving all resources from all namespaces"
-echo "Namespace,Kind,Name,Timestamp"
+# Retrieve from every namespace all quotas
+log "Retrieving quotas from all namespaces"
+echo 'Namespace,Kind,Name,Pods,"Request CPU", "Limit CPU"'
 oc get \
-    $(oc api-resources --namespaced=true --verbs=list -o name | awk '{printf "%s%s",sep,$0;sep=","}') \
+    quota \
     -A \
-     -o jsonpath='{range .items[*]}{.metadata.namespace},{.kind},{.metadata.name},{.metadata.managedFields[0].time}{"\n"}{end}' \
+     -o jsonpath='{range .items[*]}{.metadata.namespace},{.kind},{.metadata.name},{.spec.hard.pods},{.spec.hard.requests\.cpu},{.spec.hard.limits\.cpu}{"\n"}{end}' \
     --ignore-not-found \
     --sort-by='metadata.namespace'
 
@@ -37,6 +34,12 @@ oc get \
 log "Filtering out system namespace resources"
 mv ${report_file} ${report_file}.0
 egrep -v '^(default,|kube-|openshift,|openshift-)' ${report_file}.0 > ${report_file}
+rm -f ${report_file}.0
+
+# Filter out non-compute quotas
+log "Filtering out non-compute quotas"
+mv ${report_file} ${report_file}.0
+egrep -v ',$' ${report_file}.0 > ${report_file}
 rm -f ${report_file}.0
 
 log "Report is located in ${report_file}"
