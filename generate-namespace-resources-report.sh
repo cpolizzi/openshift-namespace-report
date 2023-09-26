@@ -3,7 +3,9 @@
 # References:
 # - https://access.redhat.com/solutions/3986301
 
-data_file=namespace-resources-report.csv
+now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+data_file=reports/namespace-resources-report.${now}.csv
+mkdir -p $(dirname ${data_file})
 exec 1>>"${data_file}"
 
 # Retrieve from every namespace all resources
