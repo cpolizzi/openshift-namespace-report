@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# References:
+# - https://kubernetes.io/docs/reference/kubectl/jsonpath/
+
+
 function get_timestamp_format() {
     local result="%Y-%m-%dT%H:%M:%SZ"
 
