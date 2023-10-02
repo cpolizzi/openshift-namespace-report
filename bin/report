@@ -1,0 +1,133 @@
+#!/usr/bin/python3 -B
+
+#=====
+# General dependencies
+import datetime
+import enum
+import json
+import logging
+import os
+import platform
+import subprocess
+import sys
+import yaml
+from yaml.loader import SafeLoader
+#-----
+
+
+#=====
+# Behavior abstractions.
+class Paths:
+    """
+    Local storage paths.
+    """
+    def home():
+        """
+        Determines the absolute path where this script is installed.
+        """
+        return os.path.realpath(os.path.dirname(os.path.abspath(os.path.dirname(sys.argv[0]))))
+
+    logs = f"{home()}/logs"
+
+
+class Bootstrap:
+    """
+    Bootstrap enabling behaviors.
+    """
+    def configure_logging():
+        """
+        Configures logging.
+        """
+        filename = f"{Paths.logs}/install-{datetime.datetime.now().strftime('%Y-%m-%d')}.log"
+
+        # Create log directory
+        os.makedirs(Paths.logs, exist_ok = True)
+
+        # Configure log file name and format
+        log_file = logging.FileHandler(filename = filename)
+                
+        log_file.setFormatter(
+                logging.Formatter("[%(asctime)s] %(levelname)-8s %(message)s")
+                )
+
+        # Configure logging to both the log file and console
+        # TODO Duplicate stdout and stderr to log file
+        logging.basicConfig(
+                level = logging.INFO,
+                datefmt = "%Y-%m-%d %H:%M:%S",
+                format = "[%(asctime)s] %(levelname)-8s %(message)s",
+                handlers=[
+                    logging.StreamHandler(),
+                    log_file,
+                    ],
+                )
+
+        # Enable rich logging to the current log configuration.
+        from rich.logging import RichHandler
+        logger = logging.getLogger()
+        logger.addHandler(RichHandler(log_time_format="[%Y-%m-%d %H:%M:%S]"))
+        logger.removeHandler(logger.handlers[0])
+#-----
+
+
+#=====
+# Update the Python search path to resolve our modules before we import anything we need
+sys.path.insert(1, f"{Paths.home()}/cli")
+sys.path.insert(2, f"{Paths.home()}/cli/packages")
+#-----
+
+
+#=====
+# CLI depedencies
+from rich import print as rprint
+from rich.console import Console
+from rich.table import Table
+from typing import Optional
+import typer
+import typer.rich_utils 
+
+import generate
+#-----
+
+
+#=====
+# Presentation enhancement
+#
+# By default, the style is "dim" with blue which makes it purple.
+# with a black background this is unreadable.
+typer.rich_utils.STYLE_ERRORS_SUGGESTION = ""
+#-----
+
+
+#=====
+# Ensure both long and short option for help can be used
+app = typer.Typer(
+        context_settings = {
+            "help_option_names": ["--help", "-h"]
+            },
+        rich_markup_mode="rich"
+        )
+#-----
+
+
+#=====
+# Output formats
+class OutputFormat(enum.Enum):
+    json = "json"
+    table = "table"
+    text = "text"
+    yaml = "yaml"
+#-----
+
+
+#=====
+# Build the CLI
+app.add_typer(generate.app, name="generate", 
+              help="Generate a report."
+              )
+#-----
+
+
+if __name__ == "__main__":
+    Bootstrap.configure_logging()
+    app()
