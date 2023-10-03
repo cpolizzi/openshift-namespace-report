@@ -36,7 +36,7 @@ class QuotaReport(Command):
         report_file = "reports/namespace-quota-compute-report.csv"
 
         with open(f"{report_file}", "w") as report:
-            print(f'Namespace,Kind,Name,"Pod Min CPU","Pod Max CPU","Container Min CPU","Container Max CPU","Container Default CPU","Container Default Request CPU"', file = report)
+            print(f'Namespace,Kind,Name,Pods,"Request CPU","Limit CPU"', file = report)
             args = ('''
                 get \
                     quota \
