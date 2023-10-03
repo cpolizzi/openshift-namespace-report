@@ -28,6 +28,7 @@ class Paths:
         return os.path.realpath(os.path.dirname(os.path.abspath(os.path.dirname(sys.argv[0]))))
 
     logs = f"{home()}/logs"
+    reports = f"{home()}/reports"
 
 
 class Bootstrap:
@@ -130,4 +131,5 @@ app.add_typer(generate.app, name="generate",
 
 if __name__ == "__main__":
     Bootstrap.configure_logging()
+    os.makedirs(Paths.reports, exist_ok = True)
     app()
