@@ -1,7 +1,11 @@
 #=====
 # General dependencies
+import json
+from jsonpath_ng import jsonpath
+from jsonpath_ng.ext import parse
 import logging
 import re
+import subprocess
 #-----
 
 
@@ -37,12 +41,38 @@ class LimitRangeReport(Command):
             get \
                 limitrange \
                 -A \
-                -o jsonpath='{range .items[*]}{.metadata.namespace},{.kind},{.metadata.name},{.spec.limits[?(@.type=="Pod")].min.cpu},{.spec.limits[?(@.type=="Pod")].max.cpu},{.spec.limits[?(@.type=="Container")].min.cpu},{.spec.limits[?(@.type=="Container")].max.cpu},{.spec.limits[?(@.type=="Container")].default.cpu},{.spec.limits[?(@.type=="Container")].defaultRequest.cpu}{"\\n"}{end}' \
-                --ignore-not-found \
-                --sort-by='metadata.namespace'
+                -o json
             ''').strip()
-        args += f" >> {report_file}"
         args = re.split(r' +', args)
 
         # Execute the CLI command
-        self.execute(command = command, args = args)
+        exec_cmd = [ command ] + args
+        exec_cmd_result = subprocess.run(exec_cmd, stdout = subprocess.PIPE)
+        limit_ranges = json.loads(exec_cmd_result.stdout)
+        for limit_range in limit_ranges["items"]:
+            result = []
+            expr = parse("($.metadata.namespace)|($.kind)|($.metadata.name)")
+            metadata = [ match.value for match in expr.find(limit_range) ]
+
+            expr = parse("$.spec.limits[?(@.type=='Pod')]")
+            if [ match.value for match in expr.find(limit_range) ]:
+                # Pod limit range
+                expr = parse("($.spec.limits[?(@.type=='Pod')].min.cpu)")
+                result += [ match.value for match in expr.find(limit_range) ]
+                expr = parse("($.spec.limits[?(@.type=='Pod')].max.cpu)")
+                result += [ match.value for match in expr.find(limit_range) ]
+
+            expr = parse("$.spec.limits[?(@.type=='Container')]")
+            if [ match.value for match in expr.find(limit_range) ]:
+                # Container limit range
+                expr = parse("($.spec.limits[?(@.type=='Container')].min.cpu)")
+                result += [ match.value for match in expr.find(limit_range) ]
+                expr = parse("($.spec.limits[?(@.type=='Container')].max.cpu)")
+                result += [ match.value for match in expr.find(limit_range) ]
+                expr = parse("($.spec.limits[?(@.type=='Container')].default.cpu)")
+                result += [ match.value for match in expr.find(limit_range) ]
+                expr = parse("($.spec.limits[?(@.type=='Container')].defaultRequest.cpu)")
+                result += [ match.value for match in expr.find(limit_range) ]
+
+            if result:
+                print(",".join(metadata + result))
