@@ -48,16 +48,16 @@ class QuotaReport(Command):
             # Execute the CLI command
             exec_cmd = [ command ] + args
             exec_cmd_result = subprocess.run(exec_cmd, stdout = subprocess.PIPE)
-            limit_ranges = json.loads(exec_cmd_result.stdout)
+            quotas = json.loads(exec_cmd_result.stdout)
 
             # Process results
-            for limit_range in limit_ranges["items"]:
+            for quota in quotas["items"]:
                 result = []
                 expr = parse("($.metadata.namespace)|($.kind)|($.metadata.name)")
-                metadata = [ match.value for match in expr.find(limit_range) ]
+                metadata = [ match.value for match in expr.find(quota) ]
 
                 expr = parse("($.spec.hard.pods)|($.spec.hard.'requests.cpu')|($.spec.hard.'limits.cpu')")
-                spec = ([ match.value for match in expr.find(limit_range) ])
+                spec = ([ match.value for match in expr.find(quota) ])
                 if spec:
                     result += spec
 
