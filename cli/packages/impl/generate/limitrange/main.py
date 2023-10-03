@@ -77,5 +77,5 @@ class LimitRangeReport(Command):
                     result += [ match.value for match in expr.find(limit_range) ]
 
                 if result:
-                    logging.info(f"Processed namespace: {metadata[0]}")
                     print(",".join(metadata + result), file = report)
+                logging.info(f"Processed namespace: {metadata[0]}")
