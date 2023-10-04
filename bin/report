@@ -103,11 +103,12 @@ typer.rich_utils.STYLE_ERRORS_SUGGESTION = ""
 #=====
 # Ensure both long and short option for help can be used
 app = typer.Typer(
-        context_settings = {
-            "help_option_names": ["--help", "-h"]
-            },
-        rich_markup_mode="rich"
-        )
+    context_settings = {
+        "help_option_names": ["--help", "-h"]
+        },
+    rich_markup_mode = "rich",
+    pretty_exceptions_show_locals = False
+    )
 #-----
 
 

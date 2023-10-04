@@ -5,12 +5,23 @@ from rich import print
 
 app = typer.Typer(rich_markup_mode="rich")
 
+from impl.generate.lastupdated import LastUpdatedReport
 from impl.generate.limitrange import LimitRangeReport
 from impl.generate.quota import QuotaReport
 
 
 @app.command()
-def limitranges(
+def last_updated(
+        ):
+    """
+    Generates the last updated report.
+    """
+    target = LastUpdatedReport()
+    target.generate()
+
+
+@app.command()
+def limit_ranges(
         ):
     """
     Generates the limit range report.
