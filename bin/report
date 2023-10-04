@@ -39,7 +39,7 @@ class Bootstrap:
         """
         Configures logging.
         """
-        filename = f"{Paths.logs}/install-{datetime.datetime.now().strftime('%Y-%m-%d')}.log"
+        filename = f"{Paths.logs}/report-{datetime.datetime.now().strftime('%Y-%m-%d')}.log"
 
         # Create log directory
         os.makedirs(Paths.logs, exist_ok = True)
