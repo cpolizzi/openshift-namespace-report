@@ -23,16 +23,18 @@ class LastUpdatedReport(Command):
     Generatetes the last updated report.
     """
     def __init__(self,
-                 ):
-        pass
+            summary : str,
+            ):
+        self.summary = summary
 
     def generate(self,
-              ):
+            ):
         logging.info("Preparing last updated report")
-        # Retrieve from every namespace all quotas
+        resources = []
 
         command = "oc"
         report_file = "reports/namespace-last-updated-report.csv"
+        report_summary_file = "reports/namespace-last-updated-summary-report.csv"
 
         # Get all namespaced resource types
         logging.info("Retrieving namespaced resource types")
@@ -66,24 +68,43 @@ class LastUpdatedReport(Command):
             logging.info(f"Pulling all resources across all namespaces")
             exec_cmd = [ command ] + args
             proc = subprocess.Popen(exec_cmd, stdout = subprocess.PIPE)
-            resources = []
             for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
                 line = line.strip()
                 resources.append(LastUpdatedReport.Resource(*line.split(",")))
 
+            # Sort resources
             logging.info(f"Sorting resources")
             resources.sort()
 
             # Filter namespaces and resource types
             logging.info("Filtering namespaces and resource types")
-            resources = filter(self.resource_filter, resources)
+            filtered_resources = filter(self.resource_filter, resources)
 
-            # Write report
-            logging.info("Writing report")
-            for resource in resources:
+            # Write detailed report
+            logging.info("Writing detailed report")
+            for resource in filtered_resources:
                 print(resource, file = report)
 
-            return
+        # Generate summarized report if enabled
+        if (self.summary):
+            logging.info("Generating summarized report")
+            summary = {}
+            filtered_resources = filter(self.resource_filter, resources)
+            for resource in filtered_resources:
+                if resource.namespace not in summary:
+                    logging.debug(f"Setting namespace last update time to {resource}")
+                    summary[resource.namespace] = resource
+                elif resource.timestamp > summary[resource.namespace].timestamp:
+                    logging.debug(f"Updating namespace last update time to {resource}")
+                    summary[resource.namespace] = resource
+
+            # Write summary report
+            with open(f"{report_summary_file}", "w") as report:
+                print('Namespace,Timestamp,"Last Updated Resource Type","Last Updated Resource Name"', file = report)
+                logging.info("Writing summarized report")
+                for namespace,resource in sorted(summary.items()):
+                    print(f"{resource.namespace},{resource.timestamp},{resource.kind},{resource.name}", file = report)
+
 
     class Resource():
         """
@@ -116,8 +137,10 @@ class LastUpdatedReport(Command):
     def resource_filter(self,
             resource : Resource) -> bool:
         """
-        Filters resources based on both namespace and resource type. Undesired namespaces and resource types are the candidates.
-        Also filtered are resources that do not have a managed field timestamp.
+        Filters resources based on:
+          - Namespace name
+          - Resource type
+          - Resources without a managed field timestamp
         """
         undesired_namespace_regex = r'^(default|kube-|openshift$|openshift-)'
         undesired_resource_types = [
