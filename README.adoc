@@ -1,0 +1,101 @@
+= Namespace Reports
+
+== Summary
+
+Generates three reports:
+
+* Namespace quote resources for compute.
+* Namespace limit ranges for compute.
+* Namespace last updated reports:
+** Fine grained detail report.
+** Roll up report.
+** Default is to generate both.
+
+The capability provides a rich CLI, including:
+
+* Tab completion for arguments and options.
+* Colorized logging to both *stdout* and a log file.
+* Colorized output, including for exception stack traces.
+* Integrated context sensitive help.
+
+== Usage
+
+[IMPORTANT]
+====
+The scripts in the `proto` directory are *NOT* the main scripts for the
+reports.
+
+They were only created for a rapid proof of concept and nothing more.
+
+These scripts do not have capability of producing good logging nor a rolled up
+last access report.
+====
+
+
+=== Environment Setup
+
+The report generator is written in Python 3 and makes use of a number of Python
+modules. These modules are all expressed in `requirements.txt`.
+
+Installing the necessary modules is accomplished by executing:
+[source,bash]
+----
+pip3 install --user -r requirements.txt
+----
+
+Because the report generation scripts includes context sensitive help this
+document does not cover usages as it is redundant since the tool itself
+provides this information.
+
+Executing the report generation script for help:
+[source,bash]
+----
+./bin/report -h         # <1>
+----
+<1> `-h` can be supplied at any point in the CLI.
+
+or:
+[source,bash]
+----
+./bin/report --help     # <1>
+----
+<1> `-h` can be supplied at any point in the CLI.
+
+Log files will be placed into the `logs` directory and reports will be placed
+into the `reports` directory. Both directories will be parallel to this the
+`bin` directory of this repository. Both directories are already excluded from
+source control.
+
+== Design and Implementation
+
+The report generation script relies on the following notable Python 3 modules:
+
+* `typer` - Provides a rich CLI experience that is easy to put together and
+  maintain. This handles all CLI processing and context sensitve help displays.
+  Typer can do much more.
+* `rich` - Provides rich display of CLI help, logs and exception traces. Rich
+  can do much more.
+* `shellingham` - Provides context CLI tab completion for both arguments and
+  options.
+
+As mentioned previously all reports are encompassed by a single Python 3 script
+named `report` in the `bin` directory of this repository. Python 3 was chosen
+as the final solution over BASH and in addition to the modules of note because:
+
+* It is substantially more robust.
+* When things go wrong in execution it is easier to trace.
+* Stack traces are generated and displayed when things go wrong thereby
+  enabling faster diagnostics and fixes.
+* Native ability to handle JSON, YAML, CSV and more.
+* Substantially better text parsing and processing.
+* Native support for regular expressions, including extended.
+* Native support for logging.
+* Object orientation approach allowing for encapsulation in classes instead of
+  just a pile of functions.
+* Built in documentation strings that Python oriented tooling understands from
+  which documentation can be generated.
+* Fine grained process control.
+
+The report generation script makes use of its own Python 3 modules for both the
+CLI and its implementation. These are located in the `cli` directory and
+implementations are in the `cli/packages/impl` directory.
