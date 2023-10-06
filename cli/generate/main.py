@@ -12,7 +12,7 @@ from impl.generate.quota import QuotaReport
 
 @app.command()
 def last_updated(
-        summary: bool = typer.Option(False, help="Generates a summary report."),
+        summary: bool = typer.Option(True, help="Generates a summary report."),
         ):
     """
     Generates the last updated report.
