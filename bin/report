@@ -10,8 +10,6 @@ import os
 import platform
 import subprocess
 import sys
-import yaml
-from yaml.loader import SafeLoader
 #-----
 
 
@@ -109,16 +107,6 @@ app = typer.Typer(
     rich_markup_mode = "rich",
     pretty_exceptions_show_locals = False
     )
-#-----
-
-
-#=====
-# Output formats
-class OutputFormat(enum.Enum):
-    json = "json"
-    table = "table"
-    text = "text"
-    yaml = "yaml"
 #-----
 
 
