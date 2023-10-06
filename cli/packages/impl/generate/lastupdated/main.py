@@ -1,5 +1,6 @@
 #=====
 # General dependencies
+import datetime
 import io
 import json
 from jsonpath_ng import jsonpath
@@ -33,8 +34,9 @@ class LastUpdatedReport(Command):
         resources = []
 
         command = "oc"
-        report_file = "reports/namespace-last-updated-report.csv"
-        report_summary_file = "reports/namespace-last-updated-summary-report.csv"
+        report_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        report_file = f"reports/namespace-last-updated-report-{report_date}.csv"
+        report_summary_file = f"reports/namespace-last-updated-summary-report-{report_date}.csv"
 
         # Get all namespaced resource types
         logging.info("Retrieving namespaced resource types")
@@ -104,6 +106,10 @@ class LastUpdatedReport(Command):
                 logging.info("Writing summarized report")
                 for namespace,resource in sorted(summary.items()):
                     print(f"{resource.namespace},{resource.timestamp},{resource.kind},{resource.name}", file = report)
+
+        # Inform of report locations
+        logging.info(f"Detailed report is in {report_file}")
+        logging.info(f"Summary report is in {report_summary_file}")
 
 
     class Resource():

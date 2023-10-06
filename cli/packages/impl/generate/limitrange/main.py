@@ -1,5 +1,6 @@
 #=====
 # General dependencies
+import datetime
 import json
 from jsonpath_ng import jsonpath
 from jsonpath_ng.ext import parse
@@ -33,7 +34,8 @@ class LimitRangeReport(Command):
         logging.debug("Retrieving limit ranges from all namespaces")
         command = "oc"
 
-        report_file = "reports/namespace-limitrange-compute-report.csv"
+        report_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        report_file = f"reports/namespace-limitrange-compute-report-{report_date}.csv"
 
         with open(f"{report_file}", "w") as report:
             print(f'Namespace,Kind,Name,"Pod Min CPU","Pod Max CPU","Container Min CPU","Container Max CPU","Container Default CPU","Container Default Request CPU"', file = report)
@@ -72,3 +74,6 @@ class LimitRangeReport(Command):
                 if result:
                     print(",".join(metadata + result), file = report)
                 logging.info(f"Processed namespace: {metadata[0]}")
+
+        # Inform of report locations
+        logging.info(f"Report is in {report_file}")

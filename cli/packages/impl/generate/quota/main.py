@@ -1,5 +1,6 @@
 #=====
 # General dependencies
+import datetime
 import json
 from jsonpath_ng import jsonpath
 from jsonpath_ng.ext import parse
@@ -33,7 +34,8 @@ class QuotaReport(Command):
         logging.debug("Retrieving quotas from all namespaces")
         command = "oc"
 
-        report_file = "reports/namespace-quota-compute-report.csv"
+        report_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        report_file = f"reports/namespace-quota-compute-report-{report_date}.csv"
 
         with open(f"{report_file}", "w") as report:
             print(f'Namespace,Kind,Name,Pods,"Request CPU","Limit CPU"', file = report)
@@ -64,3 +66,6 @@ class QuotaReport(Command):
                 if result:
                     print(",".join(metadata + result), file = report)
                 logging.info(f"Processed namespace: {metadata[0]}")
+
+        # Inform of report locations
+        logging.info(f"Report is in {report_file}")
